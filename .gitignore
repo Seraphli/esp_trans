@@ -1,0 +1,6 @@
+.history
+__pycache__
+plugin.setting.json
+build
+dist
+*.spec
