@@ -139,10 +139,10 @@ class Plugin(object):
 
     async def trans(self, content, source, target, copy=False, tts=False):
         with self.trans_api() as ts:
-            res = ts.query(content, source, target)
-            res = "\n".join(res.result)
+            ts.query(content, source, target)
+            res = "\n".join(ts.result)
             if tts:
-                res.play_sound()
+                ts.play_sound()
         await sio.emit(
             "notify",
             data=(
