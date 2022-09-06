@@ -145,7 +145,7 @@ class Plugin(object):
         res = ""
         with self.trans_api() as ts:
             ts.query(content, source, target)
-            res = "\n".join(ts.result)
+            res = "<br>".join(ts.result)
             await sio.emit(
                 "notify",
                 data=(
