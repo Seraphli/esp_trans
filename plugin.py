@@ -140,7 +140,7 @@ class Plugin(object):
     async def trans(self, content, source, target, copy=False, tts=False):
         with self.trans_api() as ts:
             ts.query(content, source, target)
-            res = "\n".join(ts.result)
+            res = str(ts.result)
             if tts:
                 ts.play_sound()
         await sio.emit(
