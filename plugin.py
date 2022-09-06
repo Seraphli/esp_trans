@@ -3,10 +3,11 @@ import codecs
 import json
 import asyncio
 import socketio
-import uuid
 from seletrans.api import *
 import pyperclip
 import sys
+from functools import partial
+
 
 APP_NAME = "electron-spirit"
 MANIFEST = "manifest.json"
@@ -135,14 +136,16 @@ class Plugin(object):
         self.api = PluginApi(self)
         self.hooks = {}
         for k, v in self.cfg["hooks"].items():
-            self.hooks[k] = lambda x: self.trans(x, v[0], v[1], **v[2])
+            kwargs = {}
+            if len(v) > 2:
+                kwargs = v[2]
+            self.hooks[k] = partial(self.trans, v[0], v[1], **kwargs)
 
     async def trans(self, content, source, target, copy=False, tts=False):
         res = ""
         with self.trans_api() as ts:
             ts.query(content, source, target)
-            print(ts.result)
-            res = str(ts.result)
+            res = "\n".join(ts.result)
             await sio.emit(
                 "notify",
                 data=(
