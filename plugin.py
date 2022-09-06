@@ -132,6 +132,7 @@ class Plugin(object):
     def __init__(self) -> None:
         self.load_config()
         self.trans_api = Seletrans(self.cfg["api"])
+        self.api = PluginApi(self)
         self.hooks = {}
         for k, v in self.cfg["hooks"].items():
             self.hooks[k] = lambda x: self.trans(x, v[0], v[1], **v[2])
