@@ -138,24 +138,26 @@ class Plugin(object):
             self.hooks[k] = lambda x: self.trans(x, v[0], v[1], **v[2])
 
     async def trans(self, content, source, target, copy=False, tts=False):
+        res = ""
         with self.trans_api() as ts:
             ts.query(content, source, target)
+            print(ts.result)
             res = str(ts.result)
+            await sio.emit(
+                "notify",
+                data=(
+                    {
+                        "text": res,
+                        "title": self.manifest["name"],
+                        "duration": min(max(3000, len(res) * 200), 10000),
+                    },
+                ),
+            )
+            if copy:
+                pyperclip.copy(res)
             if tts:
                 ts.play_sound()
-        await sio.emit(
-            "notify",
-            data=(
-                {
-                    "text": res,
-                    "title": self.manifest["name"],
-                    "duration": min(max(3000, len(res) * 200), 10000),
-                },
-            ),
-        )
-        if copy:
-            pyperclip.copy(res)
-        print(res)
+            print(res)
 
     def load_config(self):
         path = user_config_dir(APP_NAME, False, roaming=True)
