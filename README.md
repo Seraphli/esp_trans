@@ -1,9 +1,7 @@
-# ESP Baidu Fanyi
+# ES Translation Plugin
 
 Electron Spirit Plugin
 
-ES 插件 集成百度翻译示例, python实现
+ES 插件 使用 Seletrans 作为翻译API
 
-启动之后 ES 输入 `bf 内容` 即可翻译
-
-首次使用需要在百度翻译官网注册一个账号, 并在配置文件中填写账号密码
+可以在设置里配置想要设置的hooks
