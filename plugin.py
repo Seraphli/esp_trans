@@ -139,7 +139,7 @@ class Plugin(object):
             kwargs = {}
             if len(v) > 2:
                 kwargs = v[2]
-            self.hooks[k] = partial(self.trans, v[0], v[1], **kwargs)
+            self.hooks[k] = partial(self.trans, source=v[0], target=v[1], **kwargs)
 
     async def trans(self, content, source, target, copy=False, tts=False):
         res = ""
