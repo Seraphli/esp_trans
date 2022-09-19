@@ -144,6 +144,15 @@ class Plugin(object):
     async def trans(self, content, source, target, copy=False, tts=False):
         res = ""
         with self.trans_api() as ts:
+            await sio.emit(
+                "notify",
+                data=(
+                    {
+                        "text": f"查询{content}",
+                        "title": self.manifest["name"],
+                    },
+                ),
+            )
             ts.query(content, source, target)
             res = "<br>".join(ts.result)
             await sio.emit(
