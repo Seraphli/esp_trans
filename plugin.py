@@ -13,16 +13,16 @@ APP_NAME = "electron-spirit"
 MANIFEST = "manifest.json"
 PLUGIN_SETTING = "plugin.setting.json"
 DEFAULT_CONFIG = {
-    "api": "deepl",
+    "api": "bing",
     "hooks": {
-        "t": ["auto", "zh"],
-        "te": ["zh", "en-US"],
-        "ts": ["auto", "zh", {"tts": True}],
-        "tse": ["zh", "en-US", {"tts": True}],
-        "tc": ["auto", "zh", {"copy": True}],
-        "tce": ["zh", "en-US", {"copy": True}],
-        "tcs": ["auto", "zh", {"copy": True, "tts": True}],
-        "tcse": ["zh", "en-US", {"copy": True, "tts": True}],
+        "t": ["auto-detect", "zh-Hans"],
+        "te": ["zh-Hans", "en"],
+        "ts": ["auto-detect", "zh-Hans", {"tts": True}],
+        "tse": ["zh-Hans", "en", {"tts": True}],
+        "tc": ["auto-detect", "zh-Hans", {"copy": True}],
+        "tce": ["zh-Hans", "en", {"copy": True}],
+        "tcs": ["auto-detect", "zh-Hans", {"copy": True, "tts": True}],
+        "tcse": ["zh-Hans", "en", {"copy": True, "tts": True}],
     },
 }
 
