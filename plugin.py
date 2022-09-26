@@ -16,13 +16,20 @@ DEFAULT_CONFIG = {
     "api": "bing",
     "hooks": {
         "t": ["auto-detect", "zh-Hans"],
-        "te": ["zh-Hans", "en"],
+        "te": ["en", "zh-Hans"],
+        "tc": ["zh-Hans", "en"],
+
         "ts": ["auto-detect", "zh-Hans", {"tts": True}],
-        "tse": ["zh-Hans", "en", {"tts": True}],
+        "tse": ["en", "zh-Hans", {"tts": True}],
+        "tsc": ["zh-Hans", "en", {"tts": True}],
+
         "tc": ["auto-detect", "zh-Hans", {"copy": True}],
-        "tce": ["zh-Hans", "en", {"copy": True}],
+        "tce": ["en", "zh-Hans", {"copy": True}],
+        "tcc": ["zh-Hans", "en", {"copy": True}],
+
         "tcs": ["auto-detect", "zh-Hans", {"copy": True, "tts": True}],
-        "tcse": ["zh-Hans", "en", {"copy": True, "tts": True}],
+        "tcse": ["en", "zh-Hans", {"copy": True, "tts": True}],
+        "tcsc": ["zh-Hans", "en", {"copy": True, "tts": True}],
     },
 }
 
