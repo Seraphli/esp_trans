@@ -1,7 +1,7 @@
 {
   "name": "ES Translation Plugin",
   "abbrev": "estp",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "ES Translation Plugin",
   "init": {
     "default": [
