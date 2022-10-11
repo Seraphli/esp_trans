@@ -17,19 +17,19 @@ DEFAULT_CONFIG = {
     "hooks": {
         "t": ["auto-detect", "zh-Hans"],
         "te": ["en", "zh-Hans"],
-        "tc": ["zh-Hans", "en"],
+        "tz": ["zh-Hans", "en"],
 
         "ts": ["auto-detect", "zh-Hans", {"tts": True}],
         "tse": ["en", "zh-Hans", {"tts": True}],
-        "tsc": ["zh-Hans", "en", {"tts": True}],
+        "tsz": ["zh-Hans", "en", {"tts": True}],
 
         "tc": ["auto-detect", "zh-Hans", {"copy": True}],
         "tce": ["en", "zh-Hans", {"copy": True}],
-        "tcc": ["zh-Hans", "en", {"copy": True}],
+        "tcz": ["zh-Hans", "en", {"copy": True}],
 
         "tcs": ["auto-detect", "zh-Hans", {"copy": True, "tts": True}],
         "tcse": ["en", "zh-Hans", {"copy": True, "tts": True}],
-        "tcsc": ["zh-Hans", "en", {"copy": True, "tts": True}],
+        "tcsz": ["zh-Hans", "en", {"copy": True, "tts": True}],
     },
 }
 
