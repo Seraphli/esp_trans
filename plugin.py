@@ -7,6 +7,9 @@ from seletrans.api import *
 import pyperclip
 import sys
 from functools import partial
+import tempfile
+from datetime import datetime
+import traceback
 
 
 APP_NAME = "electron-spirit"
@@ -158,23 +161,41 @@ class Plugin(object):
                 },
             ),
         )
-        ts.instant_query(content, source, target)
-        res = "<br>".join(ts.result)
-        await sio.emit(
-            "notify",
-            data=(
-                {
-                    "text": res,
-                    "title": self.manifest["name"],
-                    "duration": min(max(3000, len(res) * 200), 10000),
-                },
-            ),
-        )
-        if copy:
-            pyperclip.copy(res)
-        if tts:
-            ts.play_sound()
-        print(res)
+        try:
+            ts.instant_query(content, source, target)
+            res = "<br>".join(ts.result)
+            await sio.emit(
+                "notify",
+                data=(
+                    {
+                        "text": res,
+                        "title": self.manifest["name"],
+                        "duration": min(max(3000, len(res) * 200), 10000),
+                    },
+                ),
+            )
+            if copy:
+                pyperclip.copy(res)
+            if tts:
+                ts.play_sound()
+            print(res)
+        except:
+            traceback.print_exc()
+            now = datetime.now()
+            time = now.strftime("%H%M%S")
+            tmp_dir = tempfile.mkdtemp(prefix=f"esp_trans_{time}")
+            with open(f"{tmp_dir}/error_log.txt", "w") as f:
+                traceback.print_exc(file=f)
+            ts.driver.save_screenshot(f"{tmp_dir}/screenshot.png")
+            await sio.emit(
+                "notify",
+                data=(
+                    {
+                        "text": f"error log saved to {tmp_dir}",
+                        "title": self.manifest["name"],
+                    },
+                ),
+            )
         self.trans_api.prepare()
 
     def load_config(self):
