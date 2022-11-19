@@ -18,15 +18,12 @@ DEFAULT_CONFIG = {
         "t": ["auto-detect", "zh-Hans"],
         "te": ["en", "zh-Hans"],
         "tz": ["zh-Hans", "en"],
-
         "ts": ["auto-detect", "zh-Hans", {"tts": True}],
         "tse": ["en", "zh-Hans", {"tts": True}],
         "tsz": ["zh-Hans", "en", {"tts": True}],
-
         "tc": ["auto-detect", "zh-Hans", {"copy": True}],
         "tce": ["en", "zh-Hans", {"copy": True}],
         "tcz": ["zh-Hans", "en", {"copy": True}],
-
         "tcs": ["auto-detect", "zh-Hans", {"copy": True, "tts": True}],
         "tcse": ["en", "zh-Hans", {"copy": True, "tts": True}],
         "tcsz": ["zh-Hans", "en", {"copy": True, "tts": True}],
@@ -139,7 +136,8 @@ class PluginApi(socketio.AsyncClientNamespace):
 class Plugin(object):
     def __init__(self) -> None:
         self.load_config()
-        self.trans_api = Seletrans(self.cfg["api"])
+        self.trans_api = Seletrans(self.cfg["api"])()
+        self.trans_api.prepare()
         self.api = PluginApi(self)
         self.hooks = {}
         for k, v in self.cfg["hooks"].items():
@@ -150,33 +148,34 @@ class Plugin(object):
 
     async def trans(self, content, source, target, copy=False, tts=False):
         res = ""
-        with self.trans_api() as ts:
-            await sio.emit(
-                "notify",
-                data=(
-                    {
-                        "text": f"查询{content}",
-                        "title": self.manifest["name"],
-                    },
-                ),
-            )
-            ts.query(content, source, target)
-            res = "<br>".join(ts.result)
-            await sio.emit(
-                "notify",
-                data=(
-                    {
-                        "text": res,
-                        "title": self.manifest["name"],
-                        "duration": min(max(3000, len(res) * 200), 10000),
-                    },
-                ),
-            )
-            if copy:
-                pyperclip.copy(res)
-            if tts:
-                ts.play_sound()
-            print(res)
+        ts = self.trans_api
+        await sio.emit(
+            "notify",
+            data=(
+                {
+                    "text": f"{source}->{target} 查询{content}",
+                    "title": self.manifest["name"],
+                },
+            ),
+        )
+        ts.instant_query(content, source, target)
+        res = "<br>".join(ts.result)
+        await sio.emit(
+            "notify",
+            data=(
+                {
+                    "text": res,
+                    "title": self.manifest["name"],
+                    "duration": min(max(3000, len(res) * 200), 10000),
+                },
+            ),
+        )
+        if copy:
+            pyperclip.copy(res)
+        if tts:
+            ts.play_sound()
+        print(res)
+        self.trans_api.prepare()
 
     def load_config(self):
         path = user_config_dir(APP_NAME, False, roaming=True)
@@ -221,6 +220,9 @@ class Plugin(object):
         await sio.wait()
         print("Loop end")
 
+    def close(self):
+        self.trans_api.close()
+
 
 if __name__ == "__main__":
     while True:
@@ -234,8 +236,10 @@ if __name__ == "__main__":
             import traceback
 
             print(traceback.format_exc())
+            p.close()
         except:
             import traceback
 
             print(traceback.format_exc())
+            p.close()
             break
