@@ -258,6 +258,11 @@ if __name__ == "__main__":
 
             print(traceback.format_exc())
             p.close()
+        except socketio.exceptions.ConnectionError:
+            import traceback
+
+            print(traceback.format_exc())
+            p.close()
         except:
             import traceback
 
