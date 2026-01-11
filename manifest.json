@@ -2,13 +2,5 @@
   "name": "ES Translation Plugin",
   "abbrev": "estp",
   "version": "0.2.0",
-  "description": "ES Translation Plugin",
-  "init": {
-    "default": [
-      "PYTHON -m pip install -U -r requirements.txt --disable-pip-version-check"
-    ]
-  },
-  "run": {
-    "default": "PYTHON plugin.py"
-  }
+  "description": "ES Translation Plugin"
 }

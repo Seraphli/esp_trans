@@ -1,16 +1,16 @@
-from appdirs import *
+import asyncio
 import codecs
 import json
-import asyncio
-import socketio
-from seletrans.api import *
-import pyperclip
 import sys
-from functools import partial
 import tempfile
-from datetime import datetime
 import traceback
+from datetime import datetime
+from functools import partial
 
+import pyperclip
+import socketio
+from appdirs import user_config_dir
+from seletrans.api import Seletrans
 
 APP_NAME = "electron-spirit"
 MANIFEST = "manifest.json"
@@ -64,76 +64,61 @@ class PluginApi(socketio.AsyncClientNamespace):
         print("Disconnected")
         asyncio.get_running_loop().stop()
 
-    def on_echo(self, data):
-        print("Echo:", data)
+    # =========================================================================
+    # Client-to-Server Response Handlers
+    # =========================================================================
 
-    def on_echo(self, data):
-        print("Echo:", data)
+    def on_c2s_echo(self, data):
+        print("Echo response:", data)
 
-    def on_addInputHook(self, data):
-        print("Add input hook:", data)
+    def on_c2s_hooks(self, data):
+        print("Hooks response:", data)
 
-    def on_delInputHook(self, data):
-        print("Del input hook:", data)
+    def on_c2s_element(self, data):
+        print("Element response:", data)
+        if data.get("code") == 0:
+            if "created" in data.get("msg", ""):
+                self.elem_count += 1
+            elif "deleted" in data.get("msg", ""):
+                self.elem_count -= 1
 
-    def on_insertCSS(self, data):
-        print("Insert css:", data)
+    def on_c2s_elemProps(self, data):
+        print("ElemProps response:", data)
 
-    def on_removeCSS(self, data):
-        print("Remove css:", data)
+    def on_c2s_elemStyle(self, data):
+        print("ElemStyle response:", data)
 
-    def on_addElem(self, data):
-        print("Add elem:", data)
-        self.elem_count += 1
+    def on_c2s_elemExec(self, data):
+        print("ElemExec response:", data)
 
-    def on_delElem(self, data):
-        print("Remove elem:", data)
-        self.elem_count -= 1
+    # =========================================================================
+    # Server-to-Client Event Handlers
+    # =========================================================================
 
-    def on_showElem(self, data):
-        print("Show view:", data)
+    def on_s2c_elemEvent(self, event):
+        event_type = event.get("type")
+        catKey = event.get("catKey")
+        if event_type == "boundChanged":
+            print("Bound changed:", catKey, event.get("bound"))
+        elif event_type == "opacityChanged":
+            print("Opacity changed:", catKey, event.get("opacity"))
+        elif event_type == "removeRequest":
+            print("Remove request:", catKey)
+            return True
+        elif event_type == "refreshRequest":
+            print("Refresh request:", catKey)
+            return True
 
-    def on_hideElem(self, data):
-        print("Hide view:", data)
-
-    def on_setBound(self, data):
-        print("Set bound:", data)
-
-    def on_setContent(self, data):
-        print("Set content:", data)
-
-    def on_setOpacity(self, data):
-        print("Set opacity:", data)
-
-    def on_execJSInElem(self, data):
-        print("Exec js in elem:", data)
-
-    def on_notify(self, data):
-        print("Notify:", data)
-
-    def on_updateOpacity(self, key, opacity):
-        print("Update opacity:", key, opacity)
-
-    def on_updateBound(self, key, bound):
-        print("Update bound:", key, bound)
-
-    async def on_processContent(self, content):
-        print("Process content:", content)
+    async def on_s2c_contentEvent(self, event):
+        content = event.get("content")
+        print("Content event:", content)
         hook = content.split(" ")[0]
         await self.parent.hooks[hook](content[len(hook) + 1 :])
 
-    def on_modeFlag(self, flags):
-        print("Mode flag:", flags)
-
-    def on_elemRemove(self, key):
-        print("Elem remove:", key)
-        # prevent remove elem
-        return True
-
-    def on_elemRefresh(self, key):
-        print("Elem refresh:", key)
-        # prevent refresh elem
-        return True
+    def on_s2c_systemEvent(self, event):
+        event_type = event.get("type")
+        if event_type == "modeFlag":
+            print("Mode flag:", event.get("flags"))
 
 
 class Plugin(object):
@@ -153,7 +138,7 @@ class Plugin(object):
         res = ""
         ts = self.trans_api
         await sio.emit(
-            "notify",
+            "c2s_notify",
             data=(
                 {
                     "text": f"{source}->{target} 查询{content}",
@@ -165,7 +150,7 @@ class Plugin(object):
             ts.instant_query(content, source, target)
             res = "<br>".join(ts.result)
             await sio.emit(
-                "notify",
+                "c2s_notify",
                 data=(
                     {
                         "text": res,
@@ -179,7 +164,7 @@ class Plugin(object):
             if tts:
                 ts.play_sound()
             print(res)
-        except:
+        except Exception:
             traceback.print_exc()
             now = datetime.now()
             time = now.strftime("%H%M%S")
@@ -188,7 +173,7 @@ class Plugin(object):
                 traceback.print_exc(file=f)
             ts.driver.save_screenshot(f"{tmp_dir}/screenshot.png")
             await sio.emit(
-                "notify",
+                "c2s_notify",
                 data=(
                     {
                         "text": f"error log saved to {tmp_dir}",
@@ -207,9 +192,11 @@ class Plugin(object):
             with codecs.open(PLUGIN_SETTING) as f:
                 self.cfg = json.load(f)
             for k in DEFAULT_CONFIG:
-                if k not in self.cfg or type(self.cfg[k]) != type(DEFAULT_CONFIG[k]):
+                if k not in self.cfg or not isinstance(
+                    self.cfg[k], type(DEFAULT_CONFIG[k])
+                ):
                     self.cfg[k] = DEFAULT_CONFIG[k]
-        except:
+        except (FileNotFoundError, json.JSONDecodeError):
             self.cfg = DEFAULT_CONFIG
         self.save_cfg()
         with codecs.open(MANIFEST) as f:
@@ -222,9 +209,9 @@ class Plugin(object):
     async def setup_connect(self):
         print("Setup connect")
         for hook in self.hooks.keys():
-            await sio.emit("addInputHook", data=(hook))
+            await sio.emit("c2s_hooks", data=({"type": "add", "regex": hook},))
         await sio.emit(
-            "notify",
+            "c2s_notify",
             data=(
                 {
                     "text": "翻译已启动. 翻译结果将通过通知形式显示, 也可以复制到剪贴板中.",
@@ -248,24 +235,17 @@ class Plugin(object):
 if __name__ == "__main__":
     while True:
         try:
-            # asyncio
             sio = socketio.AsyncClient()
             p = Plugin()
             sio.register_namespace(p.api)
             asyncio.run(p.loop())
         except RuntimeError:
-            import traceback
-
             print(traceback.format_exc())
             p.close()
         except socketio.exceptions.ConnectionError:
-            import traceback
-
             print(traceback.format_exc())
             p.close()
-        except:
-            import traceback
-
+        except Exception:
             print(traceback.format_exc())
             p.close()
             break
